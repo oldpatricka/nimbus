@@ -15,6 +15,7 @@ from propagate_adapter import PropagationAdapter
 # keywords for 'adapters' dict as well as the expected URL schemes
 PROP_ADAPTER_SCP = "scp"
 PROP_ADAPTER_GUC = "gsiftp"
+PROP_ADAPTER_HTTP = "http"
 
 class DefaultImageProcurement:
     """ImageProcurement is the wcmodule responsible for making files accessible
@@ -71,7 +72,10 @@ class DefaultImageProcurement:
                 msg = "GridFTP configuration present (propagation->guc) but cannot load a suitable GridFTP implementation in the code"
                 self.c.log.exception(msg + ": ")
                 raise InvalidConfig(msg)
-            
+
+        import propagate_http
+        self.adapters[PROP_ADAPTER_HTTP] = propagate_http.propadapter(self.p, self.c)
+
         if len(self.adapters) == 0:
             self.c.log.warn("There are no propagation adapters configured, propagation is disabled")
             return
@@ -738,4 +742,4 @@ class DefaultImageProcurement:
                 old = lf._unpropagation_target
                 lf._unpropagation_target = unproptargets[counter]
                 self.c.log.debug("old unpropagation target '%s' is now '%s'" % (old, lf._unpropagation_target))
-        
+
