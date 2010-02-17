@@ -130,7 +130,9 @@ mountpoint=$3
 echo "  - mountpoint: $mountpoint"
 datafile=$4
 datatarget=$5
-offset=$6
+if [ $# -eq 6 ]; then
+    offset=$6
+fi
 
 if [ "$subcommand" = "config" ]; then
   subcommand="CONFIG"
