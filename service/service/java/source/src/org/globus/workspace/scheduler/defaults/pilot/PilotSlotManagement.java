@@ -480,7 +480,8 @@ public class PilotSlotManagement implements SlotManagement,
         this.reserveSpace(request.getIds(),
                           request.getMemory(),
                           request.getDuration(),
-                          request.getGroupid());
+                          request.getGroupid(),
+                          request.getCreatorDN());
 
         return new Reservation(request.getIds());
     }
@@ -546,8 +547,10 @@ public class PilotSlotManagement implements SlotManagement,
             all_durations[i] = ((Number)allDurations.get(i)).intValue();
         }
 
-        this.reserveSpace(all_ids, highestMemory, highestDuration, coschedid);
+        // Assume that the creator's DN is the same for each node
+        final String creatorDN = requests[0].getCreatorDN();
 
+        this.reserveSpace(all_ids, highestMemory, highestDuration, coschedid, creatorDN);
         return new Reservation(all_ids, null, all_durations);
     }
 
@@ -565,18 +568,21 @@ public class PilotSlotManagement implements SlotManagement,
      * @param memory megabytes needed
      * @param duration seconds needed
      * @param uuid group ID, can not be null if vmids is length > 1
-     * 
+     * @param creatorDN the DN of the user who requested creation of the VM
+     *
      *  @throws ResourceRequestDeniedException can not fulfill request
      */
     private void reserveSpace(final int[] vmids,
                               final int memory,
                               final int duration,
-                              final String uuid)
+                              final String uuid,
+                              final String creatorDN)
                   throws ResourceRequestDeniedException {
 
         if (vmids == null) {
             throw new IllegalArgumentException("no vmids");
         }
+
 
         if (memory > this.maxMB) {
             String msg = "Memory request (" + memory + " MB) cannot be " +
@@ -609,7 +615,7 @@ public class PilotSlotManagement implements SlotManagement,
             }
         }
 
-        this.reserveSpaceImpl(memory, duration, slotid, vmids);
+        this.reserveSpaceImpl(memory, duration, slotid, vmids, creatorDN);
 
         // pilot reports hostname when it starts running, not returning an
         // exception to signal successful best effort pending slot
@@ -618,7 +624,8 @@ public class PilotSlotManagement implements SlotManagement,
     private void reserveSpaceImpl(final int memory,
                                   final int duration,
                                   final String uuid,
-                                  final int[] vmids)
+                                  final int[] vmids,
+                                  final String creatorDN)
             throws ResourceRequestDeniedException {
 
         final String outputFile = this.logdirPath + File.separator + uuid;
@@ -636,7 +643,8 @@ public class PilotSlotManagement implements SlotManagement,
                                                   this.extraProperties,
                                                   outputFile,
                                                   false,
-                                                  false);
+                                                  false,
+                                                  creatorDN);
             
         } catch (WorkspaceException e) {
             final String msg = "Problem with Torque argument construction";
