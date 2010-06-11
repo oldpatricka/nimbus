@@ -637,6 +637,7 @@ public class PilotSlotManagement implements SlotManagement,
         final ArrayList torquecmd;
         try {
             torquecmd = this.torque.constructQsub(this.destination,
+                                                  memory,
                                                   vmids.length,
                                                   this.ppn,
                                                   wallTime,
